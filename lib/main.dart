@@ -3,8 +3,7 @@ import 'dart:io';
 import 'package:flutter_application_1/theme_controller.dart';
 
 import 'decoder.dart';
-// ignore: unused_import
-import 'package:dio/dio.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 //import 'package:flutter_application_1/dash.dart';
@@ -157,19 +156,13 @@ class _LoginPageState extends State<LoginPage> {
     _passwordController.dispose();
     super.dispose();
   }
+  //                                             هنا تبلش الفرونت  بيج
+  //
 
   @override
   Widget build(BuildContext context) {
     var scaffold = Scaffold(
       appBar: AppBar(
-        // actions: [
-        //   IconButton(
-        //     icon: const Icon(Icons.brightness_6),
-        //     onPressed: () {
-        //       themeController.toggleTheme();
-        //     },
-        //   ),
-        // ],
         title: const Text('Login'),
         flexibleSpace: Container(
           decoration: BoxDecoration(
@@ -192,189 +185,217 @@ class _LoginPageState extends State<LoginPage> {
           color: Colors.white,
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextField(
-              onChanged: (value) {
-                setState(() {});
-              },
-              style: const TextStyle(fontSize: 18),
-              controller: _emailController,
-              decoration: InputDecoration(
-                icon: const Icon(Icons.email),
-                label: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_emailController.text.isEmpty) ...const [
-                      // Show warning icon and text if password is empty
-                      Icon(Icons.warning, color: Colors.red, size: 16),
-                      Text('Username'),
-                      Text(
-                        ' (required)',
-                        style: TextStyle(color: Colors.red, fontSize: 14),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.all(12.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Column(
+                children: [
+                  Image.asset(
+                      Theme.of(context).brightness == Brightness.dark
+                          ? 'lib/images/logointro.gif'
+                          : 'lib/images/logointrow.gif',
+                      width: 400,
+                      height: 200,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 100,
+                      height: 100,
+                      color: Colors.grey[200],
+                      child: const Icon(
+                        Icons.image_not_supported_outlined,
+                        color: Colors.red,
+                        size: 50,
                       ),
-                    ] else ...const [
-                      Icon(Icons.check_circle, color: Colors.green, size: 16),
-                      Text('Username'),
-                    ]
-                  ],
+                    );
+                  }),
+                  SizedBox(
+                    height: 10,
+                  ),
+                ],
+              ),
+              TextField(
+                onChanged: (value) {
+                  setState(() {});
+                },
+                style: const TextStyle(fontSize: 18),
+                controller: _emailController,
+                decoration: InputDecoration(
+                  icon: const Icon(Icons.email),
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_emailController.text.isEmpty) ...const [
+                        // Show warning icon and text if password is empty
+                        Icon(Icons.warning, color: Colors.red, size: 16),
+                        Text('Username'),
+                        Text(
+                          ' (required)',
+                          style: TextStyle(color: Colors.red, fontSize: 14),
+                        ),
+                      ] else ...const [
+                        Icon(Icons.check_circle, color: Colors.green, size: 16),
+                        Text('Username'),
+                      ]
+                    ],
+                  ),
+                  border: const OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: _emailController.text.isEmpty
+                        ? const BorderSide(color: Colors.red, width: 2.0)
+                        : const BorderSide(color: Colors.blue, width: 2.0),
+                  ),
                 ),
-                border: const OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: _emailController.text.isEmpty
-                      ? const BorderSide(color: Colors.red, width: 2.0)
-                      : const BorderSide(color: Colors.blue, width: 2.0),
+                cursorRadius: const Radius.circular(8.0),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                onChanged: (value) {
+                  setState(() {});
+                },
+                style: const TextStyle(fontSize: 18),
+                obscureText: true,
+                controller: _passwordController,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Password cannot be empty'; // Validation for empty password
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
+                  icon: const Icon(Icons.lock),
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_passwordController.text.isEmpty) ...[
+                        // Show warning icon and text if password is empty
+                        const Icon(Icons.warning, color: Colors.red, size: 16),
+                        const Text('Password'),
+                        const Text(
+                          ' (required)',
+                          style: TextStyle(color: Colors.red, fontSize: 14),
+                        ),
+                      ] else ...[
+                        const Icon(Icons.lock_open,
+                            color: Colors.green, size: 16),
+                        const Text('Password'),
+                      ]
+                    ],
+                  ),
+                  border: const OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: _passwordController.text.isEmpty
+                        ? const BorderSide(color: Colors.red, width: 2.0)
+                        : const BorderSide(color: Colors.blue, width: 2.0),
+                  ),
                 ),
               ),
-              cursorRadius: const Radius.circular(8.0),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              onChanged: (value) {
-                setState(() {});
-              },
-              style: const TextStyle(fontSize: 18),
-              obscureText: true,
-              controller: _passwordController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Password cannot be empty'; // Validation for empty password
-                }
-                return null;
-              },
-              decoration: InputDecoration(
-                icon: const Icon(Icons.lock),
-                label: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_passwordController.text.isEmpty) ...[
-                      // Show warning icon and text if password is empty
-                      const Icon(Icons.warning, color: Colors.red, size: 16),
-                      const Text('Password'),
-                      const Text(
-                        ' (required)',
-                        style: TextStyle(color: Colors.red, fontSize: 14),
+              const SizedBox(width: 100.0, height: 24),
+              Stack(
+                children: [
+                  if (_errorMessage == 400)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'Invalid request, please check your input', // Error message for 400
+                          style: TextStyle(color: Colors.red, fontSize: 16),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
-                    ] else ...[
-                      const Icon(Icons.lock_open,
-                          color: Colors.green, size: 16),
-                      const Text('Password'),
-                    ]
-                  ],
-                ),
-                border: const OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: _passwordController.text.isEmpty
-                      ? const BorderSide(color: Colors.red, width: 2.0)
-                      : const BorderSide(color: Colors.blue, width: 2.0),
-                ),
+                    ),
+                  if (_errorMessage == 401)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'Invalid User or Password', // Error message for 401
+                          style: TextStyle(color: Colors.red, fontSize: 16),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  if (_errorMessage == 403)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'Access denied, please check your permissions', // Error message for 403
+                          style: TextStyle(color: Colors.red, fontSize: 16),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  if (_errorMessage == 500)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'Server error, please try again later', // Error message for 500
+                          style: TextStyle(color: Colors.red, fontSize: 16),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  if (_errorMessage == 521)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'Web server is down, please try again later', // Error message for 521
+                          style: TextStyle(color: Colors.red, fontSize: 16),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
               ),
-            ),
-            const SizedBox(width: 100.0, height: 24),
-            Stack(
-              children: [
-                if (_errorMessage == 400)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        'Invalid request, please check your input', // Error message for 400
-                        style: TextStyle(color: Colors.red, fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                if (_errorMessage == 401)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        'Invalid User or Password', // Error message for 401
-                        style: TextStyle(color: Colors.red, fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                if (_errorMessage == 403)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        'Access denied, please check your permissions', // Error message for 403
-                        style: TextStyle(color: Colors.red, fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                if (_errorMessage == 500)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        'Server error, please try again later', // Error message for 500
-                        style: TextStyle(color: Colors.red, fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                if (_errorMessage == 521)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        'Web server is down, please try again later', // Error message for 521
-                        style: TextStyle(color: Colors.red, fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(width: 100.0, height: 24),
-            ElevatedButton(
-              onPressed: (_emailController.text.isEmpty ||
-                      _passwordController.text.isEmpty)
-                  ? null
-                  : _login, // Disable button if fields are empty
+              const SizedBox(width: 100.0, height: 24),
+              ElevatedButton(
+                onPressed: (_emailController.text.isEmpty ||
+                        _passwordController.text.isEmpty)
+                    ? null
+                    : _login, // Disable button if fields are empty
 
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.black,
-                backgroundColor: Colors.blue,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                textStyle: const TextStyle(fontSize: 18),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.black,
+                  backgroundColor: Colors.blue,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  textStyle: const TextStyle(fontSize: 18),
+                ),
+                child: const Text('Login'),
               ),
-              child: const Text('Login'),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

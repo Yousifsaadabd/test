@@ -163,6 +163,7 @@ class _MyApp1State extends State<MyApp1> {
                                       CrossAxisAlignment.stretch,
                                   children: [
                                     Text(
+                                      // هنا الاسم
                                       ' ${tokenInfo.username}',
                                       textAlign: TextAlign.left,
                                       style: TextStyle(
@@ -172,6 +173,7 @@ class _MyApp1State extends State<MyApp1> {
                                       ),
                                     ),
                                     Text(
+                                      //هنا البوزشن
                                       ' ${tokenInfo.position}',
                                       textAlign: TextAlign.justify,
                                       style: TextStyle(
