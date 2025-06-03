@@ -1,19 +1,33 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter_application_1/theme_controller.dart';
 
+import 'decoder.dart';
 // ignore: unused_import
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 //import 'package:flutter_application_1/dash.dart';
 import 'package:flutter_application_1/widget_test.dart';
-//import 'package:flutter_application_1/widget_test.dart';
+
 // ignore: unused_import
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
-const String baseUrl = "https://tickets.evisa.iq";
+const String baseUrl = "https://172.16.91.13";
 
 void main() {
+  HttpOverrides.global = MyHttpOverrides();
   runApp(const MyApp());
+}
+
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -21,11 +35,18 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Simple Login',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const LoginPage(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeController.themeMode,
+      builder: (context, mode, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Simple Login',
+          theme: ThemeData.light(),
+          darkTheme: ThemeData.dark(),
+          themeMode: mode,
+          home: const LoginPage(),
+        );
+      },
     );
   }
 }
@@ -38,10 +59,30 @@ class LoginPage extends StatefulWidget {
   _LoginPageState createState() => _LoginPageState();
 }
 
+class Loggginemail extends StatefulWidget {
+  const Loggginemail({super.key, String? loggedInEmail});
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _LoginPageState createState() => _LoginPageState();
+}
+
+Future<void> saveToken(String token) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('auth_token', token);
+
+  if (kDebugMode) {
+    print('Token 0000saved: $token');
+  }
+}
+
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   int? _errorMessage;
+  String? loggedInEmail;
+
+  String? token;
 
   void _login() async {
     final email = _emailController.text;
@@ -65,27 +106,31 @@ class _LoginPageState extends State<LoginPage> {
     if (kDebugMode) {
       print('Response body: ${response.body}');
     }
+    if (kDebugMode) {
+      decodeToken(response.body);
+    }
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final token = data['token'];
+      await saveToken(token);
 
-      if (token != null) {
+      Navigator.push(
         // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login successful')),
-        );
-        Navigator.push(
-          // ignore: use_build_context_synchronously
-          context,
-          MaterialPageRoute(builder: (context) => const MyApp1()),
-        );
-      } else {
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Token not found in response')),
-        );
-      }
+        context,
+        MaterialPageRoute(builder: (context) => const MyApp1()),
+      );
+
+// ignore: unused_element
+
+      // decodeToken(token);
+      // if (kDebugMode) {
+      //   print('name saved: ${decodeToken(token)?.nameId}'
+      //       '\nusername saved: ${decodeToken(token)?.username}'
+      //       '\nposition saved: ${decodeToken(token)?.position}'
+      //       // '\nexp saved: ${saveToken(token)}'
+      //       );
+      // }
     }
   }
 
@@ -117,24 +162,34 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     var scaffold = Scaffold(
       appBar: AppBar(
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.brightness_6),
+        //     onPressed: () {
+        //       themeController.toggleTheme();
+        //     },
+        //   ),
+        // ],
         title: const Text('Login'),
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.blue, Colors.purple],
+              colors: Theme.of(context).brightness == Brightness.light
+                  ? [Colors.blue, Colors.purple]
+                  : Theme.of(context).brightness == Brightness.dark
+                      ? [Colors.grey.shade800, Colors.grey.shade900]
+                      : [Colors.black.withOpacity(0.7), Colors.black],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
           ),
         ),
         toolbarHeight: 100,
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(4.0),
-          child: LinearProgressIndicator(
-            value: null, // Indeterminate progress indicator
-            backgroundColor: Colors.white,
-            color: Colors.blue,
-          ),
+        centerTitle: true,
+        titleTextStyle: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
         ),
       ),
       body: Padding(
@@ -143,6 +198,9 @@ class _LoginPageState extends State<LoginPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextField(
+              onChanged: (value) {
+                setState(() {});
+              },
               style: const TextStyle(fontSize: 18),
               controller: _emailController,
               decoration: InputDecoration(
@@ -165,8 +223,10 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
                 border: const OutlineInputBorder(),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.blue, width: 2.0),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: _emailController.text.isEmpty
+                      ? const BorderSide(color: Colors.red, width: 2.0)
+                      : const BorderSide(color: Colors.blue, width: 2.0),
                 ),
               ),
               cursorRadius: const Radius.circular(8.0),
@@ -304,6 +364,7 @@ class _LoginPageState extends State<LoginPage> {
                       _passwordController.text.isEmpty)
                   ? null
                   : _login, // Disable button if fields are empty
+
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.black,
                 backgroundColor: Colors.blue,
