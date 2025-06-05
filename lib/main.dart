@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
+// import 'dart:math';
+import 'package:flutter_application_1/decoder.dart';
 import 'package:flutter_application_1/theme_controller.dart';
 
-import 'decoder.dart';
+// import 'decoder.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -13,8 +16,9 @@ import 'package:flutter_application_1/widget_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-const String baseUrl = "https://172.16.91.13";
-
+// const String baseUrl = "https://172.16.91.13";
+const String baseUrl = "https://api.escuelajs.co/api/v1/auth/login";
+const String profileUrl = "https://api.escuelajs.co/api/v1/auth/profile";
 void main() {
   HttpOverrides.global = MyHttpOverrides();
   runApp(const MyApp());
@@ -66,12 +70,13 @@ class Loggginemail extends StatefulWidget {
   _LoginPageState createState() => _LoginPageState();
 }
 
-Future<void> saveToken(String token) async {
+Future<void> saveToken(String token, String refreshtoken) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setString('auth_token', token);
-
+  await prefs.setString('Access Token', token);
+  await prefs.setString('Refresh Token', refreshtoken);
   if (kDebugMode) {
-    print('Token 0000saved: $token');
+    log('AccessToken saved: $token');
+    log('RefreshToken saved: $refreshtoken');
   }
 }
 
@@ -83,15 +88,49 @@ class _LoginPageState extends State<LoginPage> {
 
   String? token;
 
+  Future<void> getProfile(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse(profileUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (kDebugMode) {
+        print('Profile response status: ${response.statusCode}');
+        print('Profile response body: ${response.body}');
+      }
+      if (response.statusCode == 200) {
+        //i need saveToken response body
+        final profileData = TokenInfo.fromJson(jsonDecode(response.body));
+
+        // Save the profile data to SharedPreferences
+        await TokenInfo.saveToPrefs(profileData);
+        if (kDebugMode) {
+          print('Profile fetched successfully');
+          // print(x.email);
+        }
+        // You can use profileData as needed
+      } else {
+        // Handle error if needed
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error fetching profile: $e');
+      }
+    }
+  }
+
   void _login() async {
     final email = _emailController.text;
     final password = _passwordController.text;
 
     final response = await http.post(
-      Uri.parse('$baseUrl/api/account/login'),
+      Uri.parse('$baseUrl'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'username': email,
+        'email': email,
         'password': password,
       }),
     );
@@ -105,14 +144,17 @@ class _LoginPageState extends State<LoginPage> {
     if (kDebugMode) {
       print('Response body: ${response.body}');
     }
-    if (kDebugMode) {
-      decodeToken(response.body);
-    }
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 201) {
       final data = jsonDecode(response.body);
-      final token = data['token'];
-      await saveToken(token);
+      final token = data['access_token'];
+      final refreshtoken = data['refresh_token'];
+      getProfile(token);
+      if (kDebugMode) {
+        print('Access Token: $token');
+        print('Refresh Token: $refreshtoken');
+      }
+      await saveToken(token, refreshtoken);
 
       Navigator.push(
         // ignore: use_build_context_synchronously

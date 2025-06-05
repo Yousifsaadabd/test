@@ -1,8 +1,11 @@
 import 'dart:convert';
+
+// import 'dart:developer';
 //import 'dart:math';
 //import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+// import 'package:flutter_application_1/cartpage.dart';
 import 'package:flutter_application_1/dash.dart';
 import 'package:flutter_application_1/main.dart';
 import 'package:flutter_application_1/dashboardpage.dart';
@@ -27,7 +30,9 @@ Future<void> clearSharedPrefs() async {
 
 Future<String?> getToken() async {
   final prefs = await SharedPreferences.getInstance();
-  return prefs.getString('auth_token');
+
+  return prefs.getString('Refresh Token') ?? prefs.getString('Access Token');
+  // //return prefs.getString('Access Token');
 }
 
 class TokenDataPage extends StatefulWidget {
@@ -64,6 +69,18 @@ class _MyApp1State extends State<MyApp1> {
   bool _loading = true;
   List<Product> _products = [];
 
+  Future<TokenInfo?> saveTokenInfoo() async {
+    try {
+      final token = await getToken();
+      if (token == null) return null;
+      // Add your logic here to decode or use the token if needed
+      // For now, just return null or implement your logic
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   // Future<String?> saveTokenInfoo() async {
   //   return await saveTokenInfoo(token);
 
@@ -74,6 +91,10 @@ class _MyApp1State extends State<MyApp1> {
     super.initState();
     fetchProducts();
   }
+
+  // Provide the required two arguments to saveToken, e.g.:
+
+  // Replace 'your_token_value' with the actual value you want to save.
 
   Future<void> fetchProducts() async {
     final url = Uri.parse('https://api.escuelajs.co/api/v1/products');
@@ -136,55 +157,71 @@ class _MyApp1State extends State<MyApp1> {
                           ),
                         ),
                         FutureBuilder<TokenInfo?>(
-                          future: getToken().then((token) {
-                            if (token == null) return null;
-                            final tokenInfo = decodeToken(token);
-                            return tokenInfo;
-                          }),
+                          future: TokenInfo.loadFromPrefs(),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
                               return const Center(
-                                  child: CircularProgressIndicator());
-                            } else if (!snapshot.hasData ||
-                                snapshot.data == null) {
+                                child:
+                                    Center(child: CircularProgressIndicator()),
+                              );
+                            } else if (snapshot.hasError) {
                               return const Center(
-                                  child: Text(
-                                      'لم يتم العثور على بيانات المستخدم'));
+                                child: Center(
+                                    child: Text('Error loading user data')),
+                              );
+                            } else if (!snapshot.hasData) {
+                              return const Center(
+                                child:
+                                    Center(child: Text('No user data found')),
+                              );
                             } else {
-                              final tokenInfo = snapshot.data!;
+                              if (!snapshot.hasData) {
+                                return const Center(
+                                  child: Center(
+                                      child: CircularProgressIndicator()),
+                                );
+                              }
+
+                              final user = snapshot.data!;
+
                               return Padding(
                                 padding:
-                                    const EdgeInsets.symmetric(vertical: 12.0),
+                                    const EdgeInsets.symmetric(vertical: 3.0),
                                 child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    Text(
-                                      // هنا الاسم
-                                      ' ${tokenInfo.username}',
-                                      textAlign: TextAlign.left,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        children: [
+                                          SizedBox(width: 10),
+                                          CircleAvatar(
+                                            radius: 30,
+                                            backgroundImage: NetworkImage(user
+                                                .avatar), //  يالكاظم رابط الصورة هنا                                         // هنا الصورة
+
+                                            backgroundColor: Colors.transparent,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Text(
+                                            // هنا الاسم
+                                            ' ${user.name} ',
+
+                                            textAlign: TextAlign.left,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                    Text(
-                                      //هنا البوزشن
-                                      ' ${tokenInfo.position}',
-                                      textAlign: TextAlign.justify,
-                                      style: TextStyle(
-                                        color: Colors.red,
-                                        fontSize: 20,
-                                      ),
-                                    ),
-                                    // Text(
-                                    //     '🕒 تاريخ الانتهاء: ${DateTime.fromMillisecondsSinceEpoch(tokenInfo.exp * 1000)}'),
-                                  ],
-                                ),
+                                      // Text(
+                                      //     '🕒 تاريخ الانتهاء: ${DateTime.fromMillisecondsSinceEpoch(tokenInfo.exp * 1000)}'),
+                                    ]),
                               );
                             }
                           },
@@ -228,12 +265,10 @@ class _MyApp1State extends State<MyApp1> {
                     title: const Text('Logout'),
                     onTap: () async {
                       await clearSharedPrefs();
-                      Navigator.pushReplacement(
-                        // ignore: use_build_context_synchronously
-                        context,
+                      Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(
-                          builder: (context) => const LoginPage(),
-                        ),
+                            builder: (context) => const LoginPage()),
+                        (route) => false,
                       );
                     },
                   ),

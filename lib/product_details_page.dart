@@ -1,12 +1,35 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/cartpage.dart';
+import 'package:flutter_application_1/class.dart';
 
 import 'dash.dart'; // to   Product
 
 class ProductDetailsPage extends StatelessWidget {
   final Product product;
 
-  const ProductDetailsPage({super.key, required this.product});
+  ProductDetailsPage({super.key, required this.product});
+  final List<CartItem> cartItems =
+      []; // This should ideally be managed by a state management solution
+  void addToCart(Product product) {
+    final existingItem = cartItems.firstWhere(
+      (item) => item.id == product.id,
+      orElse: () => CartItem(
+          id: product.id.toString(),
+          title: product.title,
+          price: product.price),
+    );
+
+    if (existingItem.id == product.id) {
+      existingItem.quantity++;
+    } else {
+      cartItems.add(CartItem(
+        id: product.id.toString(),
+        title: product.title,
+        price: product.price,
+      ));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,6 +127,23 @@ class ProductDetailsPage extends StatelessWidget {
             Text(
               product.description,
               style: const TextStyle(fontSize: 16),
+            ),
+            FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CartPage(
+                      cartItems: cartItems,
+                      onRemove: (item) {
+                        cartItems.remove(item);
+                      },
+                    ),
+                  ),
+                );
+              },
+              backgroundColor: Colors.deepPurple,
+              child: const Icon(Icons.shopping_cart),
             ),
           ],
         ),

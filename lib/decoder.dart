@@ -1,42 +1,61 @@
 import 'dart:convert';
 import 'dart:developer';
+// import 'dart:developer';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TokenInfo {
-  final String nameId;
-  final String username;
-  final String position;
-  final int exp;
+  final int id;
+  final String email;
+  final String name;
+  final String role;
+  final String avatar;
 
   TokenInfo({
-    required this.nameId,
-    required this.username,
-    required this.position,
-    required this.exp,
+    required this.id,
+    required this.email,
+    required this.name,
+    required this.role,
+    required this.avatar,
   });
 
-  static Future<void> saveTokenInfoo(TokenInfo tokenInfo) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('nameId', tokenInfo.nameId);
-    await prefs.setString('username', tokenInfo.username);
-    await prefs.setString('position', tokenInfo.position);
-    await prefs.setInt('exp', tokenInfo.exp);
-  }
-
   factory TokenInfo.fromJson(Map<String, dynamic> jsonData) {
-    if (jsonData['nameid'] == null ||
-        jsonData['unique_name'] == null ||
-        jsonData['Position'] == null ||
-        jsonData['exp'] == null) {
-      throw ArgumentError('Invalid------- token------ data');
+    if (jsonData['id'] == null ||
+        jsonData['email'] == null ||
+        jsonData['name'] == null ||
+        jsonData['role'] == null ||
+        jsonData['avatar'] == null) {
+      throw ArgumentError('Invalid token data');
     }
 
     return TokenInfo(
-      nameId: jsonData['nameid'],
-      username: jsonData['unique_name'],
-      position: jsonData['Position'],
-      exp: jsonData['exp'],
+      id: jsonData['id'],
+      email: jsonData['email'],
+      name: jsonData['name'],
+      role: jsonData['role'],
+      avatar: jsonData['avatar'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'name': name,
+      'role': role,
+      'avatar': avatar,
+    };
+  }
+
+  static Future<void> saveToPrefs(TokenInfo info) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('profileData', jsonEncode(info.toJson()));
+  }
+
+  static Future<TokenInfo?> loadFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStr = prefs.getString('profileData');
+    if (jsonStr == null) return null;
+    return TokenInfo.fromJson(jsonDecode(jsonStr));
   }
 }
 
@@ -50,8 +69,7 @@ TokenInfo? decodeToken(String token) {
   try {
     final jsonData = jsonDecode(decoded);
     if (jsonData is Map<String, dynamic>) {
-      log('Decoded token: $jsonData', name: 'decodeToken');
-
+      log('Decoded token: $jsonData');
       return TokenInfo.fromJson(jsonData);
     }
   } catch (e) {

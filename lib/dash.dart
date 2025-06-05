@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/class.dart';
 import 'package:flutter_application_1/product_details_page.dart';
 import 'package:http/http.dart' as http;
 
@@ -29,6 +30,26 @@ class Product {
       images: List<String>.from(json['images']),
       category: json['category']['name'],
     );
+  }
+}
+
+final List<CartItem> cartItems =
+    []; // This should ideally be managed by a state management solution
+void addToCart(Product product) {
+  final existingItem = cartItems.firstWhere(
+    (item) => item.id == product.id,
+    orElse: () => CartItem(
+        id: product.id.toString(), title: product.title, price: product.price),
+  );
+
+  if (existingItem.id == product.id) {
+    existingItem.quantity++;
+  } else {
+    cartItems.add(CartItem(
+      id: product.id.toString(),
+      title: product.title,
+      price: product.price,
+    ));
   }
 }
 
@@ -241,6 +262,25 @@ class _ProductsPageState extends State<ProductsPage> {
                                                 fontSize: 13,
                                                 color: Colors.grey),
                                           ),
+                                          const SizedBox(height: 8),
+                                          Align(
+                                            alignment: Alignment.centerRight,
+                                            child: ElevatedButton.icon(
+                                              onPressed: () =>
+                                                  addToCart(product),
+                                              icon: const Icon(Icons
+                                                  .add_shopping_cart), // الاضافة الى الكارت هنا 3#####
+                                              label: const Text('Add to Cart'),
+                                              style: ElevatedButton.styleFrom(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 8),
+                                                backgroundColor:
+                                                    Colors.deepPurple,
+                                              ),
+                                            ),
+                                          )
                                         ],
                                       ),
                                     ),
