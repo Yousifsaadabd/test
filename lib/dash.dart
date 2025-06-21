@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/class.dart';
 import 'package:flutter_application_1/product_details_page.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Product {
   final int id;
@@ -35,7 +36,7 @@ class Product {
 
 final List<CartItem> cartItems =
     []; // This should ideally be managed by a state management solution
-void addToCart(Product product) {
+Future<void> addToCart(Product product) async {
   final existingItem = cartItems.firstWhere(
     (item) => item.id == product.id,
     orElse: () => CartItem(
@@ -51,6 +52,25 @@ void addToCart(Product product) {
       price: product.price,
     ));
   }
+  await saveCartItems();
+}
+
+Future<void> saveCartItems() async {
+  final prefs = await SharedPreferences.getInstance();
+  final List<String> cartJsonList =
+      cartItems.map((item) => jsonEncode(item.toJson())).toList();
+  await prefs.setStringList('cart_items', cartJsonList);
+}
+
+Future<List<CartItem>> loadCartItems() async {
+  final prefs = await SharedPreferences.getInstance();
+  final List<String>? cartJsonList = prefs.getStringList('cart_items');
+
+  if (cartJsonList == null) return [];
+
+  return cartJsonList
+      .map((itemJson) => CartItem.fromJson(jsonDecode(itemJson)))
+      .toList();
 }
 
 class ProductsPage extends StatefulWidget {
@@ -156,7 +176,18 @@ class _ProductsPageState extends State<ProductsPage> {
                     controller: _searchController,
                     decoration: const InputDecoration(
                       labelText: 'Search',
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(
+                            Radius.circular(20)), // الزوايا المدورة
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        borderSide: BorderSide(color: Colors.grey),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        borderSide: BorderSide(color: Colors.blue),
+                      ),
                       hintText: 'Enter product name',
                       prefixIcon: Icon(Icons.search),
                     ),
@@ -263,24 +294,6 @@ class _ProductsPageState extends State<ProductsPage> {
                                                 color: Colors.grey),
                                           ),
                                           const SizedBox(height: 8),
-                                          Align(
-                                            alignment: Alignment.centerRight,
-                                            child: ElevatedButton.icon(
-                                              onPressed: () =>
-                                                  addToCart(product),
-                                              icon: const Icon(Icons
-                                                  .add_shopping_cart), // الاضافة الى الكارت هنا 3#####
-                                              label: const Text('Add to Cart'),
-                                              style: ElevatedButton.styleFrom(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 8),
-                                                backgroundColor:
-                                                    Colors.deepPurple,
-                                              ),
-                                            ),
-                                          )
                                         ],
                                       ),
                                     ),
@@ -297,7 +310,3 @@ class _ProductsPageState extends State<ProductsPage> {
     );
   }
 }
-//                           errorBuilder: (context, error, stackTrace) =>
-//                               const Icon(Icons.broken_image),  
-//                           ),
-//                           title: Text(product.title),
